@@ -29,7 +29,7 @@ git clone https://github.com/YOUR_USERNAME/marketplace.git
 ## 3. Set up virtualenv and install dependencies
 
 ```bash
-cd marketplace
+cd Marketplace
 python -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -62,7 +62,7 @@ python manage.py setup_production
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"  
 
 # Create the .env file (replace values as needed):
-echo 'export DJANGO_SECRET_KEY=(!w!rmywoj#-*jnvdkzi_7wly+ztz$l4p^&em32&x#of2ll#+d' >> .env
+echo 'export DJANGO_SECRET_KEY=6nuwegy3-0ecgh192!b-9%qj)-6aj%vkyuyjx($l)w5ism&i^k' >> .env
 echo "export DJANGO_DEBUG=False" >> .env
 echo "export DJANGO_ALLOWED_HOSTS=elben.pythonanywhere.com" >> .env
 echo "export DJANGO_CSRF_TRUSTED_ORIGINS=https://elben.pythonanywhere.com" >> .env
