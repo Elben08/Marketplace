@@ -1,5 +1,9 @@
+from io import BytesIO
+
 from django.contrib.auth.models import AbstractUser
+from django.core.files.base import ContentFile
 from django.db import models
+from PIL import Image as PilImage
 
 
 class Category(models.Model):
@@ -54,6 +58,39 @@ class Product(models.Model):
 
     class Meta:
         ordering = ["-created_at"]
+
+    def save(self, *args, **kwargs):
+        if self.image and self.pk:
+            try:
+                old = Product.objects.get(pk=self.pk)
+                if old.image and old.image.name == self.image.name:
+                    super().save(*args, **kwargs)
+                    return
+            except Product.DoesNotExist:
+                pass
+
+        if self.image:
+            try:
+                pil = PilImage.open(self.image)
+                if pil.mode in ("RGBA", "P"):
+                    pil = pil.convert("RGB")
+                max_w = 1200
+                if pil.width > max_w:
+                    ratio = max_w / pil.width
+                    new_h = int(pil.height * ratio)
+                    pil = pil.resize((max_w, new_h), PilImage.LANCZOS)
+                buf = BytesIO()
+                pil.save(buf, format="JPEG", quality=85, optimize=True)
+                ext = self.image.name.rpartition(".")[-1].lower()
+                self.image.save(
+                    self.image.name.replace(f".{ext}", ".jpg"),
+                    ContentFile(buf.getvalue()),
+                    save=False,
+                )
+            except Exception:
+                pass
+
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.name} \u2014 {self.seller.store_name}"

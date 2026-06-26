@@ -84,6 +84,10 @@ source venv/bin/activate
 python manage.py collectstatic --noinput
 ```
 
+Also add a second entry for product images (since Cloudinary is blocked on free tier):
+- **URL:** `/media/`
+- **Path:** `/home/YOUR_USERNAME/marketplace/media`
+
 ## 7. Run migrations and create admin
 
 ```bash
@@ -103,6 +107,22 @@ Your site is live at `https://YOUR_USERNAME.pythonanywhere.com` 🎉
 2. Log in with your superuser credentials
 3. Under **Sellers**, click **Add** to create seller accounts
 4. Give each seller their login credentials
+
+## 10. Schedule daily image cleanup (optional)
+
+Product images are automatically resized to ~150 KB on upload. To free disk space, set up a daily task that deletes images for products not listed in 4+ days:
+
+1. Go to **Tasks** tab in PythonAnywhere
+2. Under **"Scheduled tasks"**, click **"Add new task"**
+3. Set **Timezone** to your local time (e.g., Asia/Manila)
+4. Set **Time of day** to off-peak hours (e.g., `03:00`)
+5. Paste the command:
+   ```bash
+   cd ~/Marketplace && source venv/bin/activate && python manage.py cleanup_old_images
+   ```
+6. Click **"Create"**
+
+The task runs daily and only removes images for products that haven't been on today's menu for 4+ days. Active products are never touched.
 
 ## Updating the site
 
