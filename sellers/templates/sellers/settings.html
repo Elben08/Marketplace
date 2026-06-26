@@ -1,0 +1,35 @@
+{% extends "sellers/base.html" %}
+{% block title %}Settings — {{ user.store_name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-8 col-lg-6">
+    <div class="card p-4 border-0 shadow-sm">
+      <div class="text-center mb-4">
+        <div style="width: 72px; height: 72px; border-radius: 18px; background: {{ user.banner_color }}; display: flex; align-items: center; justify-content: center; margin: 0 auto; box-shadow: 0 4px 12px {{ user.banner_color }}44;">
+          <i class="bi bi-shop text-white" style="font-size: 1.75rem;"></i>
+        </div>
+        <h4 class="heading-font mt-3 mb-1">{{ user.store_name }}</h4>
+        <p class="section-subtitle mb-0">Update your store information</p>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        {% for field in form %}
+        <div class="mb-3">
+          <label class="form-label small fw-semibold">{{ field.label }}</label>
+          {{ field }}
+          {% if field.help_text %}
+          <div class="form-text small">{{ field.help_text }}</div>
+          {% endif %}
+          {% if field.errors %}
+          <div class="text-danger small mt-1">{{ field.errors }}</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+        <button type="submit" class="btn btn-orange w-100 py-2 fw-semibold mt-3">
+          <i class="bi bi-check-lg me-1"></i> Save Settings
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,177 @@
+from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView
+from django.shortcuts import get_object_or_404, redirect
+from django.urls import reverse_lazy
+from django.utils import timezone
+from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
+
+from .forms import ProductForm, SellerSettingsForm
+from .models import Category, DailyProduct, Product, Seller
+
+
+class HomeView(TemplateView):
+    template_name = "sellers/home.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        context["daily_products"] = (
+            DailyProduct.objects.filter(date=today)
+            .select_related("product__seller", "product__category")
+            .order_by("product__category__name", "product__name")
+        )
+        context["all_categories"] = Category.objects.all()
+        context["today"] = today
+        return context
+
+
+class CategoryView(TemplateView):
+    template_name = "sellers/category.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        category = get_object_or_404(Category, slug=kwargs["slug"])
+        context["category"] = category
+        context["daily_products"] = (
+            DailyProduct.objects.filter(date=today, product__category=category)
+            .select_related("product__seller", "product__category")
+            .order_by("product__name")
+        )
+        context["today"] = today
+        return context
+
+
+class SellerDetailView(DetailView):
+    model = Seller
+    template_name = "sellers/seller_detail.html"
+    context_object_name = "seller"
+
+    def get_queryset(self):
+        return Seller.objects.filter(is_active=True)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        context["daily_products"] = (
+            DailyProduct.objects.filter(
+                date=today, product__seller=self.object
+            )
+            .select_related("product__category")
+            .order_by("product__name")
+        )
+        context["today"] = today
+        return context
+
+
+class ProductDetailView(DetailView):
+    model = Product
+    template_name = "sellers/product_detail.html"
+    context_object_name = "product"
+
+    def get_queryset(self):
+        return Product.objects.select_related("seller", "category")
+
+
+class CustomLoginView(LoginView):
+    template_name = "sellers/login.html"
+    authentication_form = AuthenticationForm
+
+
+class DashboardView(LoginRequiredMixin, TemplateView):
+    template_name = "sellers/dashboard.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        today_entries = DailyProduct.objects.filter(
+            date=today, product__seller=self.request.user
+        ).select_related("product__category")
+        today_product_ids = today_entries.values_list("product_id", flat=True)
+        available_products = (
+            Product.objects.filter(seller=self.request.user)
+            .exclude(id__in=today_product_ids)
+            .select_related("category")
+        )
+        context["today_entries"] = today_entries
+        context["available_products"] = available_products
+        context["today"] = today
+        return context
+
+
+class ToggleDailyProductView(LoginRequiredMixin, View):
+    def post(self, request, product_id):
+        today = timezone.localdate()
+        product = get_object_or_404(Product, id=product_id, seller=request.user)
+        daily, created = DailyProduct.objects.get_or_create(
+            product=product, date=today
+        )
+        if not created:
+            daily.delete()
+        return redirect("dashboard")
+
+
+class ProductListView(LoginRequiredMixin, ListView):
+    model = Product
+    template_name = "sellers/product_list.html"
+
+    def get_queryset(self):
+        return Product.objects.filter(seller=self.request.user).select_related(
+            "category"
+        )
+
+
+class ProductCreateView(LoginRequiredMixin, CreateView):
+    model = Product
+    form_class = ProductForm
+    template_name = "sellers/product_form.html"
+
+    def get_success_url(self):
+        next_url = self.request.GET.get("next")
+        return next_url or reverse_lazy("dashboard")
+
+    def form_valid(self, form):
+        form.instance.seller = self.request.user
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Add Product"
+        return context
+
+
+class ProductUpdateView(LoginRequiredMixin, UpdateView):
+    model = Product
+    form_class = ProductForm
+    template_name = "sellers/product_form.html"
+
+    def get_success_url(self):
+        return reverse_lazy("product_list")
+
+    def get_queryset(self):
+        return Product.objects.filter(seller=self.request.user)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["title"] = "Edit Product"
+        return context
+
+
+class ProductDeleteView(LoginRequiredMixin, DeleteView):
+    model = Product
+    template_name = "sellers/product_confirm_delete.html"
+    success_url = reverse_lazy("product_list")
+
+    def get_queryset(self):
+        return Product.objects.filter(seller=self.request.user)
+
+
+class SettingsView(LoginRequiredMixin, UpdateView):
+    model = Seller
+    form_class = SellerSettingsForm
+    template_name = "sellers/settings.html"
+    success_url = reverse_lazy("settings")
+
+    def get_object(self):
+        return self.request.user

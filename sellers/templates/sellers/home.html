@@ -1,0 +1,85 @@
+{% extends "sellers/base.html" %}
+{% block title %}Today's Menu — Subdivision Market{% endblock %}
+{% block content %}
+
+{% regroup daily_products by product.category as category_list %}
+
+<div class="text-center mb-5">
+  <h1 class="display-6 heading-font mb-1" style="font-size: clamp(1.5rem, 5vw, 2.2rem);">
+    <i class="bi bi-basket text-orange"></i> What's Available Today
+  </h1>
+  <p class="text-muted">{{ today|date:"l, F j, Y" }}</p>
+</div>
+
+{% if category_list %}
+<div class="overflow-auto pb-2 mb-4" style="-webkit-overflow-scrolling: touch;">
+  <div class="d-flex gap-2" style="min-width: max-content;">
+    <a href="{% url 'home' %}" class="category-pill active">
+      <i class="bi bi-grid-3x3 cat-icon"></i> All
+    </a>
+    {% for cat in all_categories %}
+    <a href="{% url 'category' cat.slug %}" class="category-pill">
+      {% if cat.slug == 'meals-ulam' %}<i class="bi bi-basket cat-icon"></i>
+      {% elif cat.slug == 'snacks-desserts' %}<i class="bi bi-cake cat-icon"></i>
+      {% elif cat.slug == 'drinks-beverages' %}<i class="bi bi-cup-straw cat-icon"></i>
+      {% elif cat.slug == 'bread-pastries' %}<i class="bi bi-bread cat-icon"></i>
+      {% elif cat.slug == 'frozen-ready-to-cook' %}<i class="bi bi-snow cat-icon"></i>
+      {% elif cat.slug == 'groceries' %}<i class="bi bi-box-seam cat-icon"></i>
+      {% else %}<i class="bi bi-grid-3x3 cat-icon"></i>{% endif %}
+      {{ cat.name }}
+    </a>
+    {% endfor %}
+  </div>
+</div>
+
+{% for category_group in category_list %}
+<section class="mb-5 fade-in-up">
+  <div class="d-flex justify-content-between align-items-end mb-3">
+    <div>
+      <h2 class="section-title heading-font">{{ category_group.grouper.name }}</h2>
+      <p class="section-subtitle mb-0">{{ category_group.list|length }} product{{ category_group.list|length|pluralize:"s" }} available</p>
+    </div>
+    <a href="{% url 'category' category_group.grouper.slug %}" class="text-orange small text-decoration-none fw-semibold">
+      View all <i class="bi bi-arrow-right"></i>
+    </a>
+  </div>
+  <div class="row g-3">
+    {% for item in category_group.list %}
+    {% with product=item.product %}
+    <div class="col-6 col-md-4 col-lg-3 col-xl-2 fade-in-up">
+      <a href="{% url 'product_detail' product.pk %}" class="text-decoration-none">
+        <div class="product-card h-100">
+          <div class="img-wrap">
+            {% if product.image %}
+            <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy">
+            {% else %}
+            <div class="d-flex align-items-center justify-content-center bg-orange-soft" style="height: 100%;">
+              <i class="bi bi-cup-hot text-orange" style="font-size: 2.5rem; opacity: .35;"></i>
+            </div>
+            {% endif %}
+          </div>
+          <div class="card-body">
+            <span class="badge-category">{{ product.category.name }}</span>
+            <h6 class="fw-bold mt-1 mb-0 text-dark" style="font-family: 'DM Sans', sans-serif;">{{ product.name|truncatechars:28 }}</h6>
+            <p class="price-tag mb-0">₱{{ product.price }}</p>
+            <small class="store-name"><i class="bi bi-shop me-1"></i>{{ product.seller.store_name|truncatechars:18 }}</small>
+          </div>
+        </div>
+      </a>
+    </div>
+    {% endwith %}
+    {% endfor %}
+  </div>
+</section>
+{% endfor %}
+
+{% else %}
+<div class="card p-5 text-center border-0">
+  <div class="py-4">
+    <i class="bi bi-emoji-frown text-muted" style="font-size: 3.5rem; opacity: .5;"></i>
+    <h4 class="heading-font mt-3 mb-2">No products available today</h4>
+    <p class="text-muted">Sellers haven't posted their menu yet. Check back later!</p>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

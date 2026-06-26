@@ -1,0 +1,24 @@
+{% extends "sellers/base.html" %}
+{% block title %}Delete Product — {{ user.store_name }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6 col-lg-5">
+    <div class="card p-4 text-center border-0 shadow-sm">
+      <div class="py-3">
+        <div style="width: 72px; height: 72px; border-radius: 50%; background: #fef2f2; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+          <i class="bi bi-exclamation-triangle text-danger" style="font-size: 2rem;"></i>
+        </div>
+        <h4 class="heading-font mt-3 mb-1">Delete "{{ product.name }}"?</h4>
+        <p class="text-muted">This action cannot be undone.</p>
+      </div>
+      <form method="post">
+        {% csrf_token %}
+        <div class="d-flex gap-2 justify-content-center">
+          <button type="submit" class="btn btn-danger px-4" style="border-radius: 10px;"><i class="bi bi-trash me-1"></i> Delete</button>
+          <a href="{% url 'product_list' %}" class="btn btn-outline-secondary px-4" style="border-radius: 10px;">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
