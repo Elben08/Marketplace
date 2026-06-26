@@ -10,7 +10,8 @@ def seed_categories(apps, schema_editor):
         ("Bread/Pastries", "bread-pastries"),
         ("Frozen & Ready-to-Cook", "frozen-ready-to-cook"),
         ("Groceries", "groceries"),
-        ("Others", "others"),
+        ("Services", "services"),
+        ("Palengke", "palengke"),
     ]
     for name, slug in categories:
         Category.objects.get_or_create(name=name, slug=slug)

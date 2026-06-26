@@ -25,8 +25,8 @@ class ProductForm(forms.ModelForm):
             "price": forms.NumberInput(
                 attrs={"class": "form-control", "step": "0.50", "placeholder": "0.00"}
             ),
-            "image": forms.URLInput(
-                attrs={"class": "form-control", "placeholder": "https://res.cloudinary.com/..."}
+            "image": forms.ClearableFileInput(
+                attrs={"class": "form-control", "accept": "image/*"}
             ),
         }
 

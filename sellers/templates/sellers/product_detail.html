@@ -10,7 +10,7 @@
   <div class="col-md-6">
     <div class="card overflow-hidden border-0 shadow-sm">
       {% if product.image %}
-      <img src="{{ product.image }}" alt="{{ product.name }}" class="w-100" style="max-height: 420px; object-fit: cover;">
+      <img src="{{ product.image.url }}" alt="{{ product.name }}" class="w-100" style="max-height: 420px; object-fit: cover;">
       {% else %}
       <div class="d-flex align-items-center justify-content-center bg-orange-soft" style="height: 340px;">
         <i class="bi bi-cup-hot text-orange" style="font-size: 5rem; opacity: .25;"></i>

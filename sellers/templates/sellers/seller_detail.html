@@ -6,6 +6,22 @@
   <i class="bi bi-arrow-left me-1"></i> Back to All
 </a>
 
+{% if seller_inactive %}
+<div class="card p-5 text-center border-0 shadow-sm">
+  <div class="py-4">
+    <div style="width: 72px; height: 72px; border-radius: 18px; background: #fef2f2; display: flex; align-items: center; justify-content: center; margin: 0 auto;">
+      <i class="bi bi-shop text-danger" style="font-size: 1.75rem;"></i>
+    </div>
+    <h4 class="heading-font mt-3 mb-1">{{ seller.store_name }}</h4>
+    <p class="text-muted mb-0">This store is temporarily unavailable.</p>
+    <p class="text-muted small">Please check back later or browse other sellers.</p>
+    <a href="{% url 'home' %}" class="btn btn-orange mt-3 px-4">
+      <i class="bi bi-grid-3x3 me-1"></i> Browse All Sellers
+    </a>
+  </div>
+</div>
+{% else %}
+
 <div class="card p-4 mb-4 border-0 shadow-sm overflow-hidden" style="position: relative;">
   <div style="position: absolute; top: 0; left: 0; right: 0; height: 6px; background: {{ seller.banner_color }};"></div>
   <div class="d-flex align-items-start gap-3 flex-wrap pt-2">
@@ -46,7 +62,7 @@
       <div class="product-card h-100">
         <div class="img-wrap">
           {% if product.image %}
-          <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy">
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
           {% else %}
           <div class="d-flex align-items-center justify-content-center bg-orange-soft" style="height: 100%;">
             <i class="bi bi-cup-hot text-orange" style="font-size: 2.5rem; opacity: .35;"></i>
@@ -68,5 +84,6 @@
 <div class="card p-4 text-center border-0">
   <p class="text-muted mb-0">No products available from this seller today.</p>
 </div>
+{% endif %}
 {% endif %}
 {% endblock %}

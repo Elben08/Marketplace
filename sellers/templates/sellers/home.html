@@ -51,7 +51,7 @@
         <div class="product-card h-100">
           <div class="img-wrap">
             {% if product.image %}
-            <img src="{{ product.image }}" alt="{{ product.name }}" loading="lazy">
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
             {% else %}
             <div class="d-flex align-items-center justify-content-center bg-orange-soft" style="height: 100%;">
               <i class="bi bi-cup-hot text-orange" style="font-size: 2.5rem; opacity: .35;"></i>

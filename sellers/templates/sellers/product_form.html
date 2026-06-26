@@ -6,7 +6,7 @@
     <div class="card p-4 border-0 shadow-sm">
       <h4 class="heading-font mb-1">{{ title }}</h4>
       <p class="section-subtitle mb-4">Fill in the details below.</p>
-      <form method="post">
+      <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% for field in form %}
         <div class="mb-3">

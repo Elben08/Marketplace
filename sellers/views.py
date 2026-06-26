@@ -17,7 +17,9 @@ class HomeView(TemplateView):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         context["daily_products"] = (
-            DailyProduct.objects.filter(date=today)
+            DailyProduct.objects.filter(
+                date=today, product__seller__is_active=True
+            )
             .select_related("product__seller", "product__category")
             .order_by("product__category__name", "product__name")
         )
@@ -35,7 +37,10 @@ class CategoryView(TemplateView):
         category = get_object_or_404(Category, slug=kwargs["slug"])
         context["category"] = category
         context["daily_products"] = (
-            DailyProduct.objects.filter(date=today, product__category=category)
+            DailyProduct.objects.filter(
+                date=today, product__category=category,
+                product__seller__is_active=True
+            )
             .select_related("product__seller", "product__category")
             .order_by("product__name")
         )
@@ -48,15 +53,14 @@ class SellerDetailView(DetailView):
     template_name = "sellers/seller_detail.html"
     context_object_name = "seller"
 
-    def get_queryset(self):
-        return Seller.objects.filter(is_active=True)
-
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
+        context["seller_inactive"] = not self.object.is_active
         context["daily_products"] = (
             DailyProduct.objects.filter(
-                date=today, product__seller=self.object
+                date=today, product__seller=self.object,
+                product__seller__is_active=True
             )
             .select_related("product__category")
             .order_by("product__name")
@@ -71,7 +75,9 @@ class ProductDetailView(DetailView):
     context_object_name = "product"
 
     def get_queryset(self):
-        return Product.objects.select_related("seller", "category")
+        return Product.objects.filter(
+            seller__is_active=True
+        ).select_related("seller", "category")
 
 
 class CustomLoginView(LoginView):

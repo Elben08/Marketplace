@@ -22,6 +22,9 @@ class Seller(AbstractUser):
     banner_color = models.CharField(
         max_length=7, default="#f97316", help_text="Hex color for store banner"
     )
+    subscription_notes = models.TextField(
+        blank=True, help_text="Internal notes about payment/subscription status"
+    )
 
     class Meta:
         verbose_name = "seller"
@@ -46,7 +49,7 @@ class Product(models.Model):
     name = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-    image = models.URLField(blank=True, help_text="Cloudinary image URL")
+    image = models.ImageField(upload_to='products/', blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
