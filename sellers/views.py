@@ -1,6 +1,9 @@
+from datetime import date, timedelta
+
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
+from django.core.cache import cache
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -89,6 +92,7 @@ class DashboardView(LoginRequiredMixin, TemplateView):
     template_name = "sellers/dashboard.html"
 
     def get_context_data(self, **kwargs):
+        self._cleanup_stale_images()
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         today_entries = DailyProduct.objects.filter(
@@ -104,6 +108,25 @@ class DashboardView(LoginRequiredMixin, TemplateView):
         context["available_products"] = available_products
         context["today"] = today
         return context
+
+    def _cleanup_stale_images(self):
+        if cache.get("last_image_cleanup"):
+            return
+        cutoff = date.today() - timedelta(days=4)
+        recent = DailyProduct.objects.filter(
+            date__gte=cutoff
+        ).values_list("product_id", flat=True).distinct()
+        stale = Product.objects.filter(image__gt="").exclude(pk__in=recent)
+        count = 0
+        for product in stale:
+            try:
+                product.image.delete(save=False)
+            except Exception:
+                pass
+            product.image = ""
+            product.save(update_fields=["image"])
+            count += 1
+        cache.set("last_image_cleanup", True, 86400)
 
 
 class ToggleDailyProductView(LoginRequiredMixin, View):
