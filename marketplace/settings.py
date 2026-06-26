@@ -3,6 +3,15 @@ from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load .env file for environment variables (dev & production)
+try:
+    from dotenv import load_dotenv
+    env_path = BASE_DIR / '.env'
+    if env_path.exists():
+        load_dotenv(env_path)
+except ImportError:
+    pass
+
 SECRET_KEY = os.environ.get(
     'DJANGO_SECRET_KEY',
     'django-insecure-oxc=5)uu&am%4a4qkkr!ofgbp@zs^!pt-s#bmarlal0pycok$l'

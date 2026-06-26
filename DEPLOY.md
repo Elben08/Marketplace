@@ -62,33 +62,16 @@ python manage.py setup_production
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"  
 
 # Create the .env file (replace values as needed):
-echo "export DJANGO_SECRET_KEY=(!w!rmywoj#-*jnvdkzi_7wly+ztz$l4p^&em32&x#of2ll#+d" >> .env
+echo 'export DJANGO_SECRET_KEY=(!w!rmywoj#-*jnvdkzi_7wly+ztz$l4p^&em32&x#of2ll#+d' >> .env
 echo "export DJANGO_DEBUG=False" >> .env
 echo "export DJANGO_ALLOWED_HOSTS=elben.pythonanywhere.com" >> .env
 echo "export DJANGO_CSRF_TRUSTED_ORIGINS=https://elben.pythonanywhere.com" >> .env
 
 # Optional — enable Cloudinary image uploads:
-# echo "export CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME" >> .env
+# echo "CLOUDINARY_URL=cloudinary://API_KEY:API_SECRET@CLOUD_NAME" >> .env
 ```
 
-> The `.env` file uses `export` syntax because `python-dotenv` expects it. Each line is `export KEY=value`.
-
-## 6. Load env vars in Bash consoles (for manage.py commands)
-
-So `python manage.py migrate` etc. also see your env vars, activate your virtualenv then:
-
-```bash
-set -a; source ~/marketplace/.env; set +a
-```
-
-Or automate it by adding that line to your virtualenv's `postactivate` script:
-
-```bash
-echo 'set -a; source ~/marketplace/.env; set +a' >> ~/.virtualenvs/marketplace-venv/bin/postactivate
-```
-*(Adjust the venv name to match what you used in step 3.)*
-
-## 7. Set up static files
+## 6. Set up static files
 
 In the **Web** tab, under **Static files**:
 - **URL:** `/static/`
@@ -101,22 +84,20 @@ source venv/bin/activate
 python manage.py collectstatic --noinput
 ```
 
-## 8. Run migrations and create admin
+## 7. Run migrations and create admin
 
 ```bash
-# First load env vars so the secret key is available
-set -a; source ~/marketplace/.env; set +a
 python manage.py migrate
 python manage.py createsuperuser
 ```
 
-## 9. Reload
+## 8. Reload
 
 Click the **Reload** button in the Web tab.
 
 Your site is live at `https://YOUR_USERNAME.pythonanywhere.com` 🎉
 
-## 10. Create seller accounts
+## 9. Create seller accounts
 
 1. Visit `https://YOUR_USERNAME.pythonanywhere.com/admin/`
 2. Log in with your superuser credentials
