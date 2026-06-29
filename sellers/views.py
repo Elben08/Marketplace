@@ -83,6 +83,29 @@ class ProductDetailView(DetailView):
         ).select_related("seller", "category")
 
 
+class StoreListView(TemplateView):
+    template_name = "sellers/store_list.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        today = timezone.localdate()
+        sellers = Seller.objects.filter(is_active=True)
+        seller_data = []
+        for seller in sellers:
+            today_products = DailyProduct.objects.filter(
+                date=today, product__seller=seller
+            ).select_related("product").order_by("product__name")
+            seller_data.append({
+                "seller": seller,
+                "today_count": today_products.count(),
+                "preview_products": [dp.product for dp in today_products[:3]],
+            })
+        context["sellers"] = seller_data
+        context["today"] = today
+        context["all_categories"] = Category.objects.all()
+        return context
+
+
 class CustomLoginView(LoginView):
     template_name = "sellers/login.html"
     authentication_form = AuthenticationForm
