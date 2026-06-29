@@ -37,6 +37,7 @@ class SellerSettingsForm(forms.ModelForm):
         fields = [
             "store_name",
             "description",
+            "menu_image",
             "contact_messenger",
             "contact_phone",
             "banner_color",
@@ -44,6 +45,9 @@ class SellerSettingsForm(forms.ModelForm):
         widgets = {
             "store_name": forms.TextInput(attrs={"class": "form-control"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
+            "menu_image": forms.ClearableFileInput(
+                attrs={"class": "form-control", "accept": "image/*"}
+            ),
             "contact_messenger": forms.URLInput(
                 attrs={"class": "form-control", "placeholder": "https://m.me/username"}
             ),

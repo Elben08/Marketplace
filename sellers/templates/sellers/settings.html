@@ -11,11 +11,16 @@
         <h4 class="heading-font mt-3 mb-1">{{ user.store_name }}</h4>
         <p class="section-subtitle mb-0">Update your store information</p>
       </div>
-      <form method="post">
+      <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {% for field in form %}
         <div class="mb-3">
           <label class="form-label small fw-semibold">{{ field.label }}</label>
+          {% if field.name == "menu_image" and user.menu_image %}
+          <div class="mb-2">
+            <img src="{{ user.menu_image.url }}" alt="Current menu" style="max-width: 100%; max-height: 200px; border-radius: 12px; object-fit: contain;">
+          </div>
+          {% endif %}
           {{ field }}
           {% if field.help_text %}
           <div class="form-text small">{{ field.help_text }}</div>

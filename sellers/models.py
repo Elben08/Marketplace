@@ -6,6 +6,24 @@ from django.db import models
 from PIL import Image as PilImage
 
 
+def _resize_image(image_field, max_w=1200):
+    pil = PilImage.open(image_field)
+    if pil.mode in ("RGBA", "P"):
+        pil = pil.convert("RGB")
+    if pil.width > max_w:
+        ratio = max_w / pil.width
+        new_h = int(pil.height * ratio)
+        pil = pil.resize((max_w, new_h), PilImage.LANCZOS)
+    buf = BytesIO()
+    pil.save(buf, format="JPEG", quality=85, optimize=True)
+    ext = image_field.name.rpartition(".")[-1].lower()
+    image_field.save(
+        image_field.name.replace(f".{ext}", ".jpg"),
+        ContentFile(buf.getvalue()),
+        save=False,
+    )
+
+
 class Category(models.Model):
     name = models.CharField(max_length=100)
     slug = models.SlugField(unique=True)
@@ -29,6 +47,10 @@ class Seller(AbstractUser):
     subscription_notes = models.TextField(
         blank=True, help_text="Internal notes about payment/subscription status"
     )
+    menu_image = models.ImageField(
+        upload_to='menus/', blank=True,
+        help_text="Store menu flyer (optional): Upload your digital menu or price list"
+    )
 
     class Meta:
         verbose_name = "seller"
@@ -40,6 +62,19 @@ class Seller(AbstractUser):
     def save(self, *args, **kwargs):
         if not self.store_name:
             self.store_name = self.username
+        if self.menu_image and self.pk:
+            try:
+                old = Seller.objects.get(pk=self.pk)
+                if old.menu_image and old.menu_image.name == self.menu_image.name:
+                    super().save(*args, **kwargs)
+                    return
+            except Seller.DoesNotExist:
+                pass
+        if self.menu_image:
+            try:
+                _resize_image(self.menu_image)
+            except Exception:
+                pass
         super().save(*args, **kwargs)
 
 
@@ -71,22 +106,7 @@ class Product(models.Model):
 
         if self.image:
             try:
-                pil = PilImage.open(self.image)
-                if pil.mode in ("RGBA", "P"):
-                    pil = pil.convert("RGB")
-                max_w = 1200
-                if pil.width > max_w:
-                    ratio = max_w / pil.width
-                    new_h = int(pil.height * ratio)
-                    pil = pil.resize((max_w, new_h), PilImage.LANCZOS)
-                buf = BytesIO()
-                pil.save(buf, format="JPEG", quality=85, optimize=True)
-                ext = self.image.name.rpartition(".")[-1].lower()
-                self.image.save(
-                    self.image.name.replace(f".{ext}", ".jpg"),
-                    ContentFile(buf.getvalue()),
-                    save=False,
-                )
+                _resize_image(self.image)
             except Exception:
                 pass
 
