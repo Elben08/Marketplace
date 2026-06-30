@@ -17,9 +17,10 @@ A mobile-first Django web app where subdivision sellers post daily products and 
 Pre-defined, manageable via admin. 8 categories seeded: Meals/Ulam, Snacks/Desserts, Drinks & Beverages, Bread/Pastries, Frozen & Ready-to-Cook, Groceries, Services, Palengke.
 
 ### Seller (extends AbstractUser)
-Custom user model. Fields: `store_name`, `description`, `contact_messenger` (URL), `contact_phone`, `banner_color` (hex), `subscription_notes`.
+Custom user model. Fields: `store_name`, `description`, `contact_messenger` (URL), `contact_phone`, `banner_color` (hex), `subscription_notes`, `menu_image` (ImageField).
 - `is_active` = subscription toggle. When `False`, products hidden, seller can't log in.
 - Accounts created via admin only (invite-only registration).
+- `menu_image` flyer upload auto-resized to max 1200px width, JPEG @ 85% quality.
 
 ### Product
 Persistent catalog items. Fields: `seller` (FK), `category` (FK), `name`, `description`, `price` (Decimal), `image` (ImageField), `created_at`.
@@ -35,40 +36,43 @@ Lightweight availability — one row per product per date. `unique_together = ["
 | `/` | `home.html` | Today's products grouped by category, scrollable category pills |
 | `/stores/` | `store_list.html` | All active sellers with today's product previews |
 | `/category/<slug>/` | `category.html` | Products filtered by one category |
-| `/seller/<id>/` | `seller_detail.html` | Seller store with banner, contact buttons, today's products. Shows "temporarily unavailable" if inactive |
+| `/seller/<id>/` | `seller_detail.html` | Seller store with banner, contact buttons, menu flyer, today's products. Shows "temporarily unavailable" if inactive |
 | `/product/<id>/` | `product_detail.html` | Product detail, seller info, Messenger/Call buttons. 404 if seller is inactive |
 
 ## Seller Routes (login required)
 
 | Route | Template | Description |
 |-------|----------|-------------|
-| `/login/` | `login.html` | Email/password login |
+| `/login/` | `login.html` | Email/password login. "Forgot password?" link advises contacting admin |
 | `/logout/` | — | Logout, redirects to `/` |
-| `/dashboard/` | `dashboard.html` | Today's Menu — toggle products on/off, see other products. Triggers 4-day stale image cleanup (once/day) |
+| `/dashboard/` | `dashboard.html` | Today's Menu — toggle products on/off, see other products. Triggers 4-day stale image cleanup (once/day via cache) |
 | `/dashboard/products/` | `product_list.html` | Full product catalog with side-by-side edit/delete buttons |
 | `/dashboard/products/add/` | `product_form.html` | New product form with `enctype="multipart/form-data"` + `accept="image/*"` |
 | `/dashboard/products/<id>/edit/` | `product_form.html` | Edit product |
 | `/dashboard/products/<id>/delete/` | `product_confirm_delete.html` | Delete confirmation |
 | `/dashboard/toggle/<product_id>/` | — | POST-only. Adds/removes product from today's menu |
-| `/dashboard/settings/` | `settings.html` | Update store name, contact info, banner color |
+| `/dashboard/settings/` | `settings.html` | Update store name, description, menu flyer, contact info, banner color |
 
 ## Admin Routes
 
 | Route | Description |
 |-------|-------------|
-| `/admin/` | Django admin — manage sellers, categories, products, DailyProduct entries |
+| `/admin/` | Django admin — manage sellers, categories, products, DailyProduct entries. Admin-assisted password reset via seller edit page (built into `UserAdmin`). Admin self-reset via `python manage.py changepassword <username>` |
 
 ## Seller Daily Workflow
 1. Login → Dashboard shows yesterday's products with toggle buttons
 2. Tap **"Add to Today"** on products still available
 3. Tap **"Remove"** on products sold out
 4. Tap **"New Product"** for anything new — phone gallery opens for image pick
-5. Image auto-resized on upload
-6. Done — products appear on public pages for today only
+5. Image auto-resized on upload (~4MB → ~150KB)
+6. Optionally upload a store menu flyer via **Settings** (once, semi-permanent)
+7. Done — products appear on public pages for today only
 
 ## Image Handling
-- **Upload:** Phone gallery picker → `ImageField` with `accept="image/*"` → `Product.save()` resizes to max 1200px width, optimizes as JPEG @ 85% quality.
-- **Storage:** Local `media/products/` by default. If `CLOUDINARY_URL` env var is set, switches to Cloudinary CDN automatically.
+- **Upload (products):** Phone gallery picker → `ImageField` with `accept="image/*"` → `Product.save()` resizes to max 1200px width, optimizes as JPEG @ 85% quality.
+- **Upload (menu flyer):** Settings page → `Seller.menu_image` → auto-resized same as products.
+- **Resize helper:** Shared `_resize_image()` function in `models.py` used by both `Product.save()` and `Seller.save()`.
+- **Storage:** Local `media/products/` and `media/menus/` by default. If `CLOUDINARY_URL` env var is set, switches to Cloudinary CDN automatically.
 - **Cleanup:** Products not listed in `DailyProduct` for 4+ days get their image deleted. Runs automatically on dashboard visit (rate-limited to once/day via cache) or via `python manage.py cleanup_old_images`.
 
 ## Subscription / Monetization
@@ -108,6 +112,8 @@ Lightweight availability — one row per product per date. `unique_together = ["
 11. Stale image cleanup (4 days inactive, auto-run on dashboard + management command)
 12. Store listing page (`/stores/`) with seller cards + today's product previews
 13. dotenv moved from WSGI to `settings.py` (works for both web app and `manage.py`)
+14. Store menu flyer upload — `Seller.menu_image` field, resize on save
+15. "Forgot password?" link on login page — admin-assisted reset
 
 ## Superuser (local dev)
 - Username: `admin`
@@ -121,15 +127,15 @@ Project is git-initialized. `.gitignore` excludes `__pycache__`, `*.sqlite3`, `s
 marketplace/settings.py              — App config, dotenv loading, Cloudinary switch, env vars
 marketplace/urls.py                  — Root URL conf (includes sellers.urls)
 marketplace/wsgi.py                  — WSGI with sys.path for PythonAnywhere
-sellers/models.py                    — 4 models + Product.save() with image resize
-sellers/views.py                     — 13 views (6 public, 6 auth, 1 dashboard)
+sellers/models.py                    — 4 models + _resize_image() helper + Product/Seller.save() with resize
+sellers/views.py                     — 13 views (6 public, 6 auth, 1 dashboard with auto-cleanup)
 sellers/urls.py                      — 14 routes
 sellers/admin.py                     — Admin registration with subscription management
-sellers/forms.py                     — 3 forms (Product with ClearableFileInput, SellerSettings)
-sellers/templates/sellers/           — 11 templates
+sellers/forms.py                     — 3 forms (Product with ClearableFileInput, SellerSettings with menu_image)
+sellers/templates/sellers/           — 11 templates (incl. store_list, login with forgot pw)
 sellers/management/commands/         — setup_production, cleanup_old_images
 sellers/static/sellers/vendor/       — Bootstrap 5.3.0 CSS/JS, Icons 1.11.0 (local)
-sellers/migrations/                  — 6 migrations (incl. seed, rename, add services, palengke)
+sellers/migrations/                  — 7 migrations (seed, rename, add services, palengke, image, menu)
 DEPLOY.md                            — Deployment instructions
 .env.example                         — Env var template
 ```
