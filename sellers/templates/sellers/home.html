@@ -18,6 +18,11 @@
       <i class="bi bi-grid-3x3 cat-icon"></i> All
     </a>
     {% for cat in all_categories %}
+    {% if cat.slug == 'services' %}
+    <a href="{% url 'store_list' %}" class="category-pill">
+      <i class="bi bi-tools cat-icon"></i> Services
+    </a>
+    {% else %}
     <a href="{% url 'category' cat.slug %}" class="category-pill">
       {% if cat.slug == 'meals-ulam' %}<i class="bi bi-basket cat-icon"></i>
       {% elif cat.slug == 'snacks-desserts' %}<i class="bi bi-cake cat-icon"></i>
@@ -25,9 +30,11 @@
       {% elif cat.slug == 'bread-pastries' %}<i class="bi bi-bread cat-icon"></i>
       {% elif cat.slug == 'frozen-ready-to-cook' %}<i class="bi bi-snow cat-icon"></i>
       {% elif cat.slug == 'groceries' %}<i class="bi bi-box-seam cat-icon"></i>
+      {% elif cat.slug == 'palengke' %}<i class="bi bi-shop cat-icon"></i>
       {% else %}<i class="bi bi-grid-3x3 cat-icon"></i>{% endif %}
       {{ cat.name }}
     </a>
+    {% endif %}
     {% endfor %}
   </div>
 </div>

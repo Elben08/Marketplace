@@ -60,14 +60,23 @@ class SellerDetailView(DetailView):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
         context["seller_inactive"] = not self.object.is_active
-        context["daily_products"] = (
-            DailyProduct.objects.filter(
-                date=today, product__seller=self.object,
-                product__seller__is_active=True
-            )
-            .select_related("product__category")
-            .order_by("product__name")
-        )
+
+        services_cat = Category.objects.filter(slug="services").first()
+
+        daily = DailyProduct.objects.filter(
+            date=today, product__seller=self.object,
+            product__seller__is_active=True
+        ).select_related("product__category").order_by("product__name")
+
+        if services_cat:
+            daily = daily.exclude(product__category=services_cat)
+            context["service_products"] = Product.objects.filter(
+                seller=self.object, category=services_cat
+            ).select_related("category")
+        else:
+            context["service_products"] = []
+
+        context["daily_products"] = daily
         context["today"] = today
         return context
 
