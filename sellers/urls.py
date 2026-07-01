@@ -42,4 +42,9 @@ urlpatterns = [
         views.SettingsView.as_view(),
         name="settings",
     ),
+    path(
+        "dashboard/settings/delete-menu-image/<int:pk>/",
+        views.DeleteMenuImageView.as_view(),
+        name="delete_menu_image",
+    ),
 ]

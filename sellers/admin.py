@@ -1,7 +1,17 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 
-from .models import Category, DailyProduct, Product, Seller
+from .models import Category, DailyProduct, MenuImage, Product, Seller
+
+
+class MenuImageInline(admin.TabularInline):
+    model = MenuImage
+    extra = 1
+
+
+class DailyProductInline(admin.TabularInline):
+    model = DailyProduct
+    extra = 1
 
 
 @admin.register(Category)
@@ -39,15 +49,11 @@ class SellerAdmin(UserAdmin):
             )
         }),
     )
+    inlines = [MenuImageInline]
 
     @admin.display(description="Subscription", boolean=True)
     def subscription_status(self, obj):
         return obj.is_active
-
-
-class DailyProductInline(admin.TabularInline):
-    model = DailyProduct
-    extra = 1
 
 
 @admin.register(Product)

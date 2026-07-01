@@ -16,11 +16,6 @@
         {% for field in form %}
         <div class="mb-3">
           <label class="form-label small fw-semibold">{{ field.label }}</label>
-          {% if field.name == "menu_image" and user.menu_image %}
-          <div class="mb-2">
-            <img src="{{ user.menu_image.url }}" alt="Current menu" style="max-width: 100%; max-height: 200px; border-radius: 12px; object-fit: contain;">
-          </div>
-          {% endif %}
           {{ field }}
           {% if field.help_text %}
           <div class="form-text small">{{ field.help_text }}</div>
@@ -33,6 +28,43 @@
         <button type="submit" class="btn btn-orange w-100 py-2 fw-semibold mt-3">
           <i class="bi bi-check-lg me-1"></i> Save Settings
         </button>
+      </form>
+    </div>
+
+    <div class="card p-4 border-0 shadow-sm mt-4">
+      <h5 class="heading-font mb-3" style="font-size: 1.1rem;"><i class="bi bi-images text-orange me-1"></i> Menu Flyers</h5>
+      <p class="section-subtitle mb-3">Upload your digital menu posters or price lists. Customers will see these on your store page.</p>
+
+      {% if menu_images %}
+      <div class="row g-2 mb-4">
+        {% for img in menu_images %}
+        <div class="col-6">
+          <div class="position-relative">
+            <img src="{{ img.image.url }}" alt="Menu {{ forloop.counter }}" style="width: 100%; height: 130px; object-fit: cover; border-radius: 12px;">
+            <form method="post" action="{% url 'delete_menu_image' img.pk %}" class="position-absolute top-0 end-0 m-1">
+              {% csrf_token %}
+              <button type="submit" class="btn btn-sm btn-danger border-0" style="border-radius: 8px; opacity: .85;" onclick="return confirm('Delete this menu image?')">
+                <i class="bi bi-x-lg"></i>
+              </button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="text-center py-3 bg-orange-soft rounded-3 mb-4">
+        <i class="bi bi-image text-muted" style="font-size: 1.5rem;"></i>
+        <p class="text-muted small mb-0 mt-1">No menu flyers uploaded yet.</p>
+      </div>
+      {% endif %}
+
+      <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <input type="hidden" name="add_menu_image" value="1">
+        <div class="d-flex gap-2">
+          <div class="flex-grow-1">{{ menu_image_form.image }}</div>
+          <button type="submit" class="btn btn-orange flex-shrink-0"><i class="bi bi-plus-lg"></i> Add</button>
+        </div>
       </form>
     </div>
   </div>

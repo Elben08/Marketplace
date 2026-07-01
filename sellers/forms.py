@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Product, Seller
+from .models import MenuImage, Product, Seller
 
 
 class SellerLoginForm(forms.Form):
@@ -37,7 +37,6 @@ class SellerSettingsForm(forms.ModelForm):
         fields = [
             "store_name",
             "description",
-            "menu_image",
             "contact_messenger",
             "contact_phone",
             "banner_color",
@@ -45,9 +44,6 @@ class SellerSettingsForm(forms.ModelForm):
         widgets = {
             "store_name": forms.TextInput(attrs={"class": "form-control"}),
             "description": forms.Textarea(attrs={"class": "form-control", "rows": 3}),
-            "menu_image": forms.ClearableFileInput(
-                attrs={"class": "form-control", "accept": "image/*"}
-            ),
             "contact_messenger": forms.URLInput(
                 attrs={"class": "form-control", "placeholder": "https://m.me/username"}
             ),
@@ -56,5 +52,16 @@ class SellerSettingsForm(forms.ModelForm):
             ),
             "banner_color": forms.TextInput(
                 attrs={"class": "form-control", "type": "color"}
+            ),
+        }
+
+
+class MenuImageForm(forms.ModelForm):
+    class Meta:
+        model = MenuImage
+        fields = ["image"]
+        widgets = {
+            "image": forms.ClearableFileInput(
+                attrs={"class": "form-control", "accept": "image/*"}
             ),
         }

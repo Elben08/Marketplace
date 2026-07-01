@@ -128,3 +128,22 @@ class DailyProduct(models.Model):
 
     def __str__(self):
         return f"{self.product.name} \u2014 {self.date}"
+
+
+class MenuImage(models.Model):
+    seller = models.ForeignKey(
+        Seller, on_delete=models.CASCADE, related_name="menu_images"
+    )
+    image = models.ImageField(upload_to='menus/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-uploaded_at"]
+
+    def save(self, *args, **kwargs):
+        if self.image:
+            try:
+                _resize_image(self.image)
+            except Exception:
+                pass
+        super().save(*args, **kwargs)

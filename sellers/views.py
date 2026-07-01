@@ -9,8 +9,8 @@ from django.urls import reverse_lazy
 from django.utils import timezone
 from django.views.generic import CreateView, DeleteView, DetailView, ListView, TemplateView, UpdateView, View
 
-from .forms import ProductForm, SellerSettingsForm
-from .models import Category, DailyProduct, Product, Seller
+from .forms import MenuImageForm, ProductForm, SellerSettingsForm
+from .models import Category, DailyProduct, MenuImage, Product, Seller
 
 
 class HomeView(TemplateView):
@@ -227,3 +227,27 @@ class SettingsView(LoginRequiredMixin, UpdateView):
 
     def get_object(self):
         return self.request.user
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["menu_images"] = MenuImage.objects.filter(seller=self.request.user)
+        context["menu_image_form"] = MenuImageForm()
+        return context
+
+    def post(self, request, *args, **kwargs):
+        if "add_menu_image" in request.POST:
+            form = MenuImageForm(request.POST, request.FILES)
+            if form.is_valid():
+                menu_image = form.save(commit=False)
+                menu_image.seller = request.user
+                menu_image.save()
+            return redirect("settings")
+        return super().post(request, *args, **kwargs)
+
+
+class DeleteMenuImageView(LoginRequiredMixin, View):
+    def post(self, request, pk):
+        image = get_object_or_404(MenuImage, pk=pk, seller=request.user)
+        image.image.delete(save=False)
+        image.delete()
+        return redirect("settings")
