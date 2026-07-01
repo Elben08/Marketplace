@@ -19,7 +19,7 @@
     </a>
     {% for cat in all_categories %}
     {% if cat.slug == 'services' %}
-    <a href="{% url 'store_list' %}" class="category-pill">
+    <a href="{% url 'store_list' %}?services=1" class="category-pill">
       <i class="bi bi-tools cat-icon"></i> Services
     </a>
     {% else %}

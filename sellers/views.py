@@ -99,18 +99,35 @@ class StoreListView(TemplateView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         today = timezone.localdate()
+        services_filter = self.request.GET.get("services") == "1"
+
+        services_cat = Category.objects.filter(slug="services").first()
         sellers = Seller.objects.filter(is_active=True)
+
+        if services_filter and services_cat:
+            sellers = sellers.filter(products__category=services_cat).distinct()
+
         seller_data = []
         for seller in sellers:
-            today_products = DailyProduct.objects.filter(
-                date=today, product__seller=seller
-            ).select_related("product").order_by("product__name")
+            if services_filter and services_cat:
+                service_products = seller.products.filter(category=services_cat)
+                count = service_products.count()
+                previews = service_products[:3]
+            else:
+                today_products = DailyProduct.objects.filter(
+                    date=today, product__seller=seller
+                ).select_related("product").order_by("product__name")
+                count = today_products.count()
+                previews = [dp.product for dp in today_products[:3]]
+
             seller_data.append({
                 "seller": seller,
-                "today_count": today_products.count(),
-                "preview_products": [dp.product for dp in today_products[:3]],
+                "today_count": count,
+                "preview_products": previews,
             })
+
         context["sellers"] = seller_data
+        context["services_filter"] = services_filter
         context["today"] = today
         context["all_categories"] = Category.objects.all()
         return context
