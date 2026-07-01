@@ -4,6 +4,7 @@ from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.contrib.auth.views import LoginView
 from django.core.cache import cache
+from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect
 from django.urls import reverse_lazy
 from django.utils import timezone
@@ -112,6 +113,48 @@ class StoreListView(TemplateView):
         context["sellers"] = seller_data
         context["today"] = today
         context["all_categories"] = Category.objects.all()
+        return context
+
+
+class SearchView(TemplateView):
+    template_name = "sellers/search_results.html"
+
+    def get(self, request, *args, **kwargs):
+        query = request.GET.get("q", "").strip()
+        if not query:
+            return redirect("home")
+        return super().get(request, *args, **kwargs)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        query = self.request.GET.get("q", "").strip()
+        today = timezone.localdate()
+
+        context["query"] = query
+
+        context["product_results"] = (
+            DailyProduct.objects.filter(
+                date=today,
+                product__seller__is_active=True,
+            )
+            .filter(
+                Q(product__name__icontains=query)
+                | Q(product__description__icontains=query)
+            )
+            .select_related("product__seller", "product__category")
+            .order_by("product__name")
+        )
+
+        context["seller_results"] = (
+            Seller.objects.filter(is_active=True)
+            .filter(
+                Q(store_name__icontains=query)
+                | Q(description__icontains=query)
+            )
+            .order_by("store_name")
+        )
+
+        context["today"] = today
         return context
 
 

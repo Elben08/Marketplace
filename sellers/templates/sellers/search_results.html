@@ -1,0 +1,96 @@
+{% extends "sellers/base.html" %}
+{% block title %}Search: {{ query }} — Subdivision Market{% endblock %}
+{% block content %}
+
+<div class="mb-4">
+  <h4 class="heading-font mb-1">
+    <i class="bi bi-search text-orange me-1"></i> Search Results
+  </h4>
+  <p class="text-muted">
+    {% if product_results or seller_results %}
+    Found
+    {% if product_results %}{{ product_results|length }} product{{ product_results|length|pluralize }}{% endif %}
+    {% if product_results and seller_results %} &amp; {% endif %}
+    {% if seller_results %}{{ seller_results|length }} store{{ seller_results|length|pluralize }}{% endif %}
+    for <strong>"{{ query }}"</strong>
+    {% endif %}
+  </p>
+</div>
+
+{% if product_results %}
+<h5 class="heading-font mb-3" style="font-size: 1.1rem;">
+  <i class="bi bi-box-seam text-orange me-1"></i> Products
+</h5>
+<div class="row g-3 mb-5">
+  {% for entry in product_results %}
+  {% with product=entry.product %}
+  <div class="col-6 col-md-4 col-lg-3 col-xl-2 fade-in-up">
+    <a href="{% url 'product_detail' product.pk %}" class="text-decoration-none">
+      <div class="product-card h-100">
+        <div class="img-wrap">
+          {% if product.image %}
+          <img src="{{ product.image.url }}" alt="{{ product.name }}" loading="lazy">
+          {% else %}
+          <div class="d-flex align-items-center justify-content-center bg-orange-soft" style="height: 100%;">
+            <i class="bi bi-cup-hot text-orange" style="font-size: 2.5rem; opacity: .35;"></i>
+          </div>
+          {% endif %}
+        </div>
+        <div class="card-body">
+          <span class="badge-category">{{ product.category.name }}</span>
+          <h6 class="fw-bold mt-1 mb-0 text-dark" style="font-family: 'DM Sans', sans-serif;">{{ product.name|truncatechars:28 }}</h6>
+          <p class="price-tag mb-0">₱{{ product.price }}</p>
+          <small class="store-name"><i class="bi bi-shop me-1"></i>{{ product.seller.store_name|truncatechars:18 }}</small>
+        </div>
+      </div>
+    </a>
+  </div>
+  {% endwith %}
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if seller_results %}
+<h5 class="heading-font mb-3" style="font-size: 1.1rem;">
+  <i class="bi bi-shop text-orange me-1"></i> Stores
+</h5>
+<div class="row g-4 mb-5">
+  {% for s in seller_results %}
+  <div class="col-12 col-md-6 col-lg-4 fade-in-up">
+    <div class="card border-0 shadow-sm overflow-hidden" style="border-radius: 16px;">
+      <div style="height: 6px; background: {{ s.banner_color }};"></div>
+      <div class="p-4">
+        <div class="d-flex align-items-start gap-3 mb-3">
+          <div style="width: 56px; height: 56px; border-radius: 16px; background: {{ s.banner_color }}; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 4px 12px {{ s.banner_color }}33;">
+            <i class="bi bi-shop text-white" style="font-size: 1.35rem;"></i>
+          </div>
+          <div class="flex-grow-1" style="min-width: 0;">
+            <h5 class="heading-font mb-0 text-truncate">{{ s.store_name }}</h5>
+            {% if s.description %}
+            <p class="text-muted small mb-0 mt-1 text-truncate-2">{{ s.description }}</p>
+            {% endif %}
+          </div>
+        </div>
+        <a href="{% url 'seller_detail' s.pk %}" class="btn btn-outline-orange w-100">
+          Visit Store <i class="bi bi-arrow-right ms-1"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% if not product_results and not seller_results %}
+<div class="card p-5 text-center border-0">
+  <div class="py-4">
+    <i class="bi bi-search text-muted" style="font-size: 3.5rem; opacity: .5;"></i>
+    <h4 class="heading-font mt-3 mb-2">No results found</h4>
+    <p class="text-muted">Try searching for a product name, category, or store.</p>
+    <a href="{% url 'home' %}" class="btn btn-orange mt-2 px-4">
+      <i class="bi bi-grid-3x3 me-1"></i> Browse Today's Menu
+    </a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}
